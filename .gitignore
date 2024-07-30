@@ -8,3 +8,11 @@
 __pycache__
 MANIFEST
 dist/
+
+
+# files
+poetry.lock
+
+# extensions
+*.txt
+*.nc
