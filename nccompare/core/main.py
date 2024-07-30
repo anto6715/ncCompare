@@ -6,7 +6,6 @@ __email__ = "antonio.mariani@cmcc.it"
 import logging
 import os
 import re
-from collections import namedtuple
 from collections.abc import Sequence, Iterable
 from typing import Optional, List
 
@@ -14,39 +13,14 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+import nccompare.conf as settings
+from nccompare.model import CompareResult
+
 # settings
-logging.basicConfig(
-    level=logging.WARNING,
-    format="[%(asctime)s] - %(levelname)s: %(message)s",
-    # format='[%(asctime)s] - %(levelname)s - %(name)s.%(funcName)s: %(message)s',
-    handlers=[
-        # logging.FileHandler('example.log')    # to create a log files
-        logging.StreamHandler()
-    ],
-)
-logger = logging.getLogger("compare")
+logger = logging.getLogger("nccompare")
 
 PASS = "PASSED"
 FAIL = "FAILED"
-
-DTYPE_NOT_CHECKED = ["S8", "S1", "O"]  # S8|S1:char, O: string
-TIME_DTYPE = ["datetime64[ns]", "<M8[ns]"]
-
-COMPARE_MESSAGE = namedtuple(
-    "CompareMessage",
-    [
-        "result",
-        "relative_error",
-        "min_diff",
-        "max_diff",
-        "mask_equal",
-        "file1",
-        "file2",
-        "variable",
-        "description",
-    ],
-    defaults=["-" for _ in range(9)],
-)
 
 
 def all_match_are_satisfied(matching_strings: tuple, file2: str):
@@ -183,10 +157,10 @@ def compare_datasets(
     logger.info(f"Comparing {file1} with {file2}")
     dataset1, err_msg = safe_open_dataset(file1)
     if err_msg is not None:
-        return [COMPARE_MESSAGE(description=err_msg)]
+        return [CompareResult(description=err_msg)]
     dataset2, err_msg = safe_open_dataset(file2)
     if err_msg is not None:
-        return [COMPARE_MESSAGE(description=err_msg)]
+        return [CompareResult(description=err_msg)]
 
     # keep only float vars
     if variables_to_compare:
@@ -196,7 +170,7 @@ def compare_datasets(
 
     if err_msg is not None:
         # an error message has been already printed at this point
-        return [COMPARE_MESSAGE(description=err_msg)]
+        return [CompareResult(description=err_msg)]
 
     logger.debug(f"Variables to check: {dataset1_vars_list}")
 
@@ -211,7 +185,7 @@ def compare_datasets(
             field2 = dataset2[var]
         except Exception as e:
             result.append(
-                COMPARE_MESSAGE(description=f"cannot read {var} from {file2}: {e}")
+                CompareResult(description=f"cannot read {var} from {file2}: {e}")
             )
             continue
 
@@ -234,7 +208,7 @@ def compare_datasets(
         # dimensions mismatch
         if field1.shape != field2.shape:
             result.append(
-                COMPARE_MESSAGE(
+                CompareResult(
                     description=f"Can't compare {var} in {file1} and in {file2} with shapes {field1.shape} {field2.shape}"
                 )
             )
@@ -248,7 +222,7 @@ def compare_datasets(
             difference_field: np.ma.MaskedArray = mask_array1 - mask_array2
         except Exception as e:
             result.append(
-                COMPARE_MESSAGE(
+                CompareResult(
                     description=f"an unknown error occurs while comparing {var}: {e}"
                 )
             )
@@ -278,7 +252,7 @@ def compare_datasets(
             check_result = PASS
 
         result.append(
-            COMPARE_MESSAGE(
+            CompareResult(
                 result=check_result,
                 relative_error=f"{rel_err:.2e}",
                 min_diff=f"{min_difference:.2e}",
@@ -298,7 +272,7 @@ def compute_relative_error(diff: np.ma.MaskedArray, field2: xr.DataArray):
     if np.all(diff_no_nan == 00):
         return 0.0
 
-    if field2.dtype in TIME_DTYPE:
+    if field2.dtype in settings.TIME_DTYPE:
         field2_values = field2.values.view("int64")
     else:
         field2_values = field2.values
@@ -313,7 +287,7 @@ def compute_relative_error(diff: np.ma.MaskedArray, field2: xr.DataArray):
         logger.warning(f"An error occurred when computing relative error: {e}")
         rel_err = np.nan
 
-    if field2.dtype in TIME_DTYPE:
+    if field2.dtype in settings.TIME_DTYPE:
         return rel_err / np.timedelta64(1, "s")
     return rel_err
 
@@ -326,7 +300,7 @@ def get_dataset_variables(dataset: xr.Dataset):
             [
                 var_name
                 for var_name in dataset.data_vars
-                if dataset[var_name].dtype not in DTYPE_NOT_CHECKED
+                if dataset[var_name].dtype not in settings.DTYPE_NOT_CHECKED
             ]
         )
     except Exception as e:
@@ -337,7 +311,7 @@ def get_dataset_variables(dataset: xr.Dataset):
             [
                 var_name
                 for var_name in dataset.dims
-                if dataset[var_name].dtype not in DTYPE_NOT_CHECKED
+                if dataset[var_name].dtype not in settings.DTYPE_NOT_CHECKED
             ]
         )
     except Exception as e:
