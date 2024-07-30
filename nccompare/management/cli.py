@@ -1,4 +1,6 @@
 import argparse
+import importlib.metadata
+import sys
 
 from nccompare import core
 from nccompare.conf import settings
@@ -58,6 +60,9 @@ def get_args(raw_args=None):
         action="store_true",
         help="Print version and exit",
     )
+    if "-V" in sys.argv or "--version" in sys.argv:
+        print(importlib.metadata.version("nccompare"))
+        sys.exit(0)
     return parse.parse_args(raw_args)
 
 

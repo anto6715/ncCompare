@@ -2,7 +2,6 @@
 
 __author__ = "Antonio Mariani"
 __email__ = "antonio.mariani@cmcc.it"
-__version__ = "0.1.0"
 
 import logging
 import os
