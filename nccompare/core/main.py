@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
-__author__ = "Antonio Mariani"
-__email__ = "antonio.mariani@cmcc.it"
-
 import logging
 import os
 import re
-from collections.abc import Sequence, Iterable
-from typing import Optional, List
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Optional, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -45,77 +43,35 @@ def get_match(pattern, string):
         return None
 
 
-def get_file_list_to_compare_with_match(
-    sequence1: Sequence, sequence2, match_pattern: str
-):
+def common_pattern_exists(first_str: str, second_str: str, pattern: str) -> bool:
     """
-    Given a regex match pattern, it finds a fileX in sequence1 that match the regex expression,
-        then try to find in sequence2 a fileY that match the regex pattern with the same value of fileX.
-        Example:
-            match_pattern = \d{7}_\d{8}
-            fileX = MO_PR_PF_*3901977_20221201*_p01_20221201_20221201.nc
-            fileY = GL_LATEST_PR_PF_*3901977_20221201*.nc
-        Between ** character has been highlighted the pattern that match with regex match_patten
+    Check if pattern exists in first string and second string and if they match exactly the same string
+
+    Example:
+        first_str = "mfs-eas8_20150101_grid_T.nc"
+        second_str = "my-simu_20150101_grid_T.nc"
+        pattern = "\d{8}"
+
     Args:
-        sequence1: An iterable where find the files that match with match_pattern
-        sequence2: An iterable where find the files that match match_pattern with the same values of the files
-            from sequence1
-        match_pattern: A regex expression
+        first_str: First string
+        second_str: Second string
+        pattern: regex pattern
 
-    Returns: A list of tuple. Each tuple contains two files that have the same value in correspondence of match_pattern
+    Returns:
+        True if pattern match both first_str and second_str and the matched string is the same.
     """
-    not_found = 0
-    match_list = list()
-    for file in sequence1:
-        matching_strings = get_match(match_pattern, file)
-        if matching_strings:
-            match_found = False
-            for file2 in sequence2:
-                filename2 = os.path.basename(file2)
-                if all_match_are_satisfied(matching_strings, filename2):
-                    match_found = True
-                    logger.debug("Found two files that match")
-                    logger.debug(f"\t- {file}")
-                    logger.debug(f"\t- {file2}")
-                    match_list.append((file, file2))
-            if not match_found:
-                print(f"{FAIL} No matching found for {file}")
-                not_found += 1
-        else:
-            logger.debug(f"The file {file} doesn't match with {match_pattern}")
+    if pattern is None:
+        return False
 
-    return match_list, not_found
+    regex = re.compile(pattern)
 
+    match1 = regex.findall(first_str)
+    match2 = regex.findall(second_str)
 
-def walklevel(input_dir, level=1):
-    """Generator function, usage: for root, dirs, files in walklevel: # do something"""
-    input_dir = input_dir.rstrip(os.path.sep)
-    assert os.path.isdir(input_dir)
-    num_sep = input_dir.count(os.path.sep)
-    max_depth_level = (
-        num_sep + level - 1
-    )  # -1 used to have the same behavior of find bash command
-    for root, dirs, files in os.walk(input_dir):
-        yield root, dirs, files
-        num_sep_this = root.count(os.path.sep)
-        # level < 0 is a special case used to explore all the subdirs
-        if num_sep_this >= max_depth_level and level > 0:
-            del dirs[:]
+    if match1 and match2:
+        return sorted(match1) == sorted(match2)
 
-
-def get_file_list_to_compare(nc_file_list1: list, nc_file_list2: list):
-    not_found = 0
-    file_list_to_compare = list()
-    for file1 in nc_file_list1:
-        filename1 = os.path.basename(file1)
-        match_file2 = [file2 for file2 in nc_file_list2 if filename1 in file2]
-        if len(match_file2) == 0:
-            print(f"{FAIL} No matching found for {file1}")
-            not_found += 1
-        else:
-            file_list_to_compare += [(file1, file2) for file2 in match_file2]
-
-    return file_list_to_compare, not_found
+    return False
 
 
 def safe_open_dataset(input_file: str) -> (Optional[xr.Dataset], str):
@@ -320,71 +276,118 @@ def get_dataset_variables(dataset: xr.Dataset):
     return variables, None
 
 
+def find_not_common_files(reference_files, comparison_files) -> (List[str], List[str]):
+    """
+
+    Args:
+        reference_files: Reference files
+        comparison_files: Files to compare with reference files
+
+    Returns:
+        A list of files in reference_files but not in comparison_files, \
+        a list if files in comparison_files but not in reference_files
+    """
+
+    reference_filenames = {f.name for f in reference_files}
+    comparison_filenames = {f.name for f in comparison_files}
+
+    missing_filenames = reference_filenames - comparison_filenames
+    not_expected_filenames = comparison_filenames - reference_filenames
+
+    missing_files = [f for f in reference_files if f.name in missing_filenames]
+    not_expected_files = [
+        f for f in comparison_files if f.name in not_expected_filenames
+    ]
+    return missing_files, not_expected_files
+
+
+def find_file_matches(
+    reference_input_files: List[Path],
+    comparison_input_files: List[Path],
+    common_pattern: str = None,
+) -> Dict[Path, List[Path]]:
+    """
+    For each file in reference_input_files,
+    return a list of file with the same filename or with the same substring matching common_pattern.
+    If no match is found, an empty list is associated to that file.
+
+    Args:
+        reference_input_files: List of reference input files
+        comparison_input_files: List of files to compare with reference input files
+        common_pattern: regex expression to identify a common substring between two files
+
+    Returns:
+
+    """
+    to_compare = dict()
+    for ref in reference_input_files:
+        to_compare[ref] = []
+        for cmp in comparison_input_files:
+            if ref.name == cmp.name or common_pattern_exists(
+                ref.name, cmp.name, common_pattern
+            ):
+                to_compare[ref].append(cmp)
+
+    return to_compare
+
+
 def execute(
-    folder1: str,
-    folder2: str,
+    folder1: Path,
+    folder2: Path,
     filter_name: str,
     common_pattern: str,
-    maxdepth: int,
-    variables: list,
+    variables: List[str],
     last_time_step: bool,
 ):
-    # read input file list
-    nc_file_list1 = load_file_list(filter_name, folder1, maxdepth)
-    nc_file_list2 = load_file_list(filter_name, folder2, maxdepth)
+    ########################
+    # INPUT FILES
+    ########################
+    reference_input_files = load_files(folder1, filter_name)
+    comparison_input_files = load_files(folder2, filter_name)
 
-    # filter file list to compare
-    if common_pattern is None:
-        files_to_compare, not_found = get_file_list_to_compare(
-            nc_file_list1, nc_file_list2
-        )
-    else:
-        files_to_compare, not_found = get_file_list_to_compare_with_match(
-            nc_file_list1, nc_file_list2, common_pattern
-        )
+    ########################
+    # FILES TO COMPARE
+    ########################
+    files_to_compare = find_file_matches(
+        reference_input_files, comparison_input_files, common_pattern
+    )
 
-    if len(files_to_compare) == 0:
-        logger.error("No files to compare")
-        exit(1)
-
-    # start comparison
+    ########################
+    # COMPARISON
+    ########################
     results = []
-    errors_found = not_found
-    for file1, file2 in files_to_compare:
-        df = pd.DataFrame(
-            [],
-            columns=[
-                "Result",
-                "Relative error",
-                "Min Diff",
-                "Max Diff",
-                "Mask Equal",
-                "Reference File",
-                "Comparison File",
-                "Variable",
-                "Description",
-            ],
-        )
-        result = compare_datasets(file1, file2, variables, last_time_step)
-        for row_data in result:
-            df.loc[len(df)] = list(row_data)
-        df_to_print = df.drop(["Comparison File", "Reference File"], axis=1)
-        print(f"\n- Reference file: {file1}")
-        print(f"- Comparison file: {file2}")
-        print(df_to_print.to_string(index=False))
-        if (df["Result"] == "FAILED").any():
-            errors_found += 1
-        results.append(df)
+    errors_found = 0
+    for reference, compares in files_to_compare.items():
+        for cmp in compares:
+            df = pd.DataFrame(
+                [],
+                columns=[
+                    "Result",
+                    "Relative error",
+                    "Min Diff",
+                    "Max Diff",
+                    "Mask Equal",
+                    "Reference File",
+                    "Comparison File",
+                    "Variable",
+                    "Description",
+                ],
+            )
+            result = compare_datasets(reference, cmp, variables, last_time_step)
+            for row_data in result:
+                df.loc[len(df)] = list(row_data)
+            df_to_print = df.drop(["Comparison File", "Reference File"], axis=1)
+            print(f"\n- Reference file: {reference}")
+            print(f"- Comparison file: {cmp}")
+            print(df_to_print.to_string(index=False))
+            if (df["Result"] == "FAILED").any():
+                errors_found += 1
+            results.append(df)
 
-    if errors_found > 0:
-        exit(1)
+        if errors_found > 0:
+            exit(1)
 
 
-def load_file_list(filter_name, folder1, maxdepth):
-    nc_file_list1 = [
-        os.path.join(root, f)
-        for root, dirs, files in walklevel(folder1, maxdepth)
-        for f in files
-        if get_match(filter_name, os.path.join(root, f))
-    ]
-    return nc_file_list1
+def load_files(directory: Path, filter_name: str) -> List[Path]:
+    """Load all files within a directory if they match the filter name"""
+    return [f for f in directory.glob(filter_name) if f.is_file()]
