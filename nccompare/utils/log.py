@@ -21,7 +21,7 @@ DEFAULT_LOGGING = {
     },
     "handlers": {
         "console": {
-            "level": "INFO",
+            "level": "WARNING",
             "filters": ["require_debug_false"],
             "class": "logging.StreamHandler",
             "formatter": "my_fmt",

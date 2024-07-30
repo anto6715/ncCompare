@@ -1,6 +1,7 @@
 import argparse
 import importlib.metadata
 import sys
+from pathlib import Path
 
 from nccompare import core
 from nccompare.conf import settings
@@ -11,10 +12,10 @@ def get_args(raw_args=None):
 
     parse = argparse.ArgumentParser(description="netCDF Comparison Tool")
     # General args
-    parse.add_argument("folder1", type=str, help="Path of first folder to compare")
-    parse.add_argument("folder2", type=str, help="Path of second folder to compare")
+    parse.add_argument("folder1", type=Path, help="Path of first folder to compare")
+    parse.add_argument("folder2", type=Path, help="Path of second folder to compare")
     parse.add_argument(
-        "--name",
+        "-f" "--filter",
         dest="filter_name",
         type=str,
         default=settings.DEFAULT_NAME_TO_COMPARE,
@@ -22,16 +23,9 @@ def get_args(raw_args=None):
         "It can be a sub-set of the complete name or a regex expression",
     )
     parse.add_argument(
-        "--maxdepth",
-        type=int,
-        default=settings.DEFAULT_MAXDEPTH,
-        help="Descend at most levels levels of directories below the "
-        "starting-points. If set to -1 it scan all the subdirectories",
-    )
-    parse.add_argument(
         "--common_pattern",
         type=str,
-        default=None,
+        default=settings.DEFAULT_COMMON_PATTERN,
         help="Common file pattern in two files to compare. "
         "Es mfsX_date.nc and expX_date.nc -> date.nc is the common part",
     )
