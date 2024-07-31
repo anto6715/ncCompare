@@ -30,7 +30,7 @@ def get_args(raw_args=None):
         "Es mfsX_date.nc and expX_date.nc -> date.nc is the common part",
     )
     parse.add_argument(
-        "--variables", nargs="+", default=None, help="Variable to compare"
+        "--variables", nargs="+", default=settings.DEFAULT_VARIABLES_TO_CHECK, help="Variable to compare"
     )
     parse.add_argument(
         "-v",
