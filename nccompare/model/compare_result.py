@@ -6,7 +6,6 @@ FAILED = False
 
 
 class CompareResult(NamedTuple):
-    result: bool = FAILED
     relative_error: float = "-"
     min_diff: float = "-"
     max_diff: float = "-"
