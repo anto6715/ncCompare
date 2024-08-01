@@ -5,6 +5,7 @@ from typing import List, Iterable
 
 import numpy as np
 import xarray as xr
+import dask.array as da
 
 import nccompare.conf as settings
 from nccompare.exceptions import LastTimestepTimeCheckException, AllNaN
@@ -137,8 +138,10 @@ def compute_relative_error(diff: np.ndarray, field2: np.ndarray):
 
     try:
         # Suppress division by zero and invalid value warnings
-        with np.errstate(divide="ignore", invalid="ignore"):
-            rel_err = np.nanmax(abs_diff / abs_field2)
+        with (np.errstate(divide="ignore", invalid="ignore")):
+            rel_err_array = abs_diff / abs_field2
+            rel_err_array[np.isinf(rel_err_array)] = np.nan
+            rel_err = np.nanmax(rel_err_array)
     except Exception as e:
         logger.warning(f"An error occurred when computing relative error: {e}")
         rel_err = np.nan
