@@ -1,6 +1,7 @@
 import argparse
 import importlib.metadata
 import sys
+import time
 from pathlib import Path
 
 from nccompare import core
@@ -61,5 +62,7 @@ def get_args(raw_args=None):
 
 
 if __name__ == "__main__":
+    start = time.perf_counter()
     args: argparse.Namespace = get_args()
     core.execute(**vars(args))
+    print(f"Run time: {time.perf_counter() - start}Sec")
