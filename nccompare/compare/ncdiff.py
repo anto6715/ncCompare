@@ -1,11 +1,10 @@
 import logging
 import warnings
 from pathlib import Path
-from typing import List, Iterable
+from typing import List, Iterable, Any
 
 import numpy as np
 import xarray as xr
-import dask.array as da
 
 import nccompare.conf as settings
 from nccompare.exceptions import LastTimestepTimeCheckException, AllNaN
@@ -113,7 +112,7 @@ def select_last_time_step(field: xr.DataArray) -> xr.DataArray:
         return field
 
 
-def find_time_dims_name(dims: Iterable) -> str:
+def find_time_dims_name(dims: Iterable) -> Any | None:
     time_dims_name = [dim for dim in dims if "time" in dim]
     if len(time_dims_name) == 0:
         return None
@@ -138,7 +137,7 @@ def compute_relative_error(diff: np.ndarray, field2: np.ndarray):
 
     try:
         # Suppress division by zero and invalid value warnings
-        with (np.errstate(divide="ignore", invalid="ignore")):
+        with np.errstate(divide="ignore", invalid="ignore"):
             rel_err_array = abs_diff / abs_field2
             rel_err_array[np.isinf(rel_err_array)] = np.nan
             rel_err = np.nanmax(rel_err_array)
