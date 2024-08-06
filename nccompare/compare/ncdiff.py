@@ -16,24 +16,38 @@ warnings.filterwarnings("ignore", message="All-NaN slice encountered")
 logger = logging.getLogger("nccompare")
 
 
+class NoMatchFound(Exception):
+    pass
+
+
+def compare(
+    compare_match: dict[Path, list[Path]], variables: List[str], last_time_step: bool
+):
+    for reference, to_compares in compare_match.items():
+        if len(to_compares) == 0:
+            yield Comparison(
+                reference, None, NoMatchFound(f"No match found for {reference}")
+            )
+
+        try:
+            for to_compare in to_compares:
+                comparison = Comparison(reference, to_compare)
+                comparison.extend(
+                    compare_files(reference, to_compare, variables, last_time_step=last_time_step)
+                )
+                yield comparison
+
+        except Exception as e:
+            yield Comparison(reference, None, e)
+
+
 def compare_files(
     file1: Path, file2: Path, variables: List[str], **kwargs
-) -> Comparison:
-    logger.info(f"Comparing {file1} with {file2}")
-    comparison = Comparison(file1, file2)
-
-    try:
-        dataset1 = xr.open_dataset(file1)
-        dataset2 = xr.open_dataset(file2)
-        variables_to_compare = get_dataset_variables(dataset1, variables)
-        comparison.extend(
-            compare_datasets(dataset1, dataset2, variables_to_compare, **kwargs)
-        )
-
-    except Exception as e:
-        comparison.set_exception(e)
-
-    return comparison
+) -> list[CompareResult]:
+    dataset1 = xr.open_dataset(file1)
+    dataset2 = xr.open_dataset(file2)
+    variables_to_compare = get_dataset_variables(dataset1, variables)
+    return compare_datasets(dataset1, dataset2, variables_to_compare, **kwargs)
 
 
 def compare_datasets(
@@ -50,7 +64,6 @@ def compare_datasets(
             field2 = comparison[var]
             results.append(compare_variables(field1, field2, var, last_time_step))
         except Exception as e:
-            logger.error(e)
             results.append(CompareResult(variable=var, description=str(e)))
     return results
 
@@ -140,7 +153,7 @@ def compute_relative_error(diff: np.ndarray, field2: np.ndarray):
             rel_err_array[np.isinf(rel_err_array)] = np.nan
             rel_err = np.nanmax(rel_err_array)
     except Exception as e:
-        logger.warning(f"An error occurred when computing relative error: {e}")
+        logger.debug(f"An error occurred when computing relative error: {e}")
         rel_err = np.nan
 
     if field2.dtype in settings.TIME_DTYPE:

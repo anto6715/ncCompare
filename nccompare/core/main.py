@@ -35,12 +35,8 @@ def execute(
     ########################
     # COMPARISON
     ########################
-    for reference, compares in files_to_compare.items():
-        for cmp in compares:
-            result = compare.compare_files(
-                reference, cmp, variables=variables, last_time_step=last_time_step
-            )
-            print(result)
+    for result in compare.compare(files_to_compare, variables, last_time_step):
+        print(result)
 
 
 def load_files(directory: Path, filter_name: str) -> List[Path]:
