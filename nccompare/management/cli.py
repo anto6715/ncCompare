@@ -18,14 +18,13 @@ def get_args(raw_args=None):
         dest="filter_name",
         type=str,
         default=settings.DEFAULT_NAME_TO_COMPARE,
-        help="Name of the files to compare."
-        "It can be a sub-set of the complete name or a regex expression",
+        help="Filter to select files to compare. Examples: *.nc, *_grid_*"
     )
     parse.add_argument(
         "--common_pattern",
         type=str,
         default=settings.DEFAULT_COMMON_PATTERN,
-        help="Common file pattern in two files to compare. "
+        help="Common file pattern in two files to compare"
         "Es mfsX_date.nc and expX_date.nc -> date.nc is the common part",
     )
     parse.add_argument(
