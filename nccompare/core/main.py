@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import List
 
 from nccompare import compare
+from nccompare.printlib import formatter
 from nccompare.utils.regex import find_file_matches
 
 # settings
@@ -36,7 +37,7 @@ def execute(
     # COMPARISON
     ########################
     for result in compare.compare(files_to_compare, variables, last_time_step):
-        print(result)
+        formatter.print_comparison(result)
 
 
 def load_files(directory: Path, filter_name: str) -> List[Path]:

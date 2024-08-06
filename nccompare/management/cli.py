@@ -9,8 +9,6 @@ from nccompare.conf import settings
 
 
 def get_args(raw_args=None):
-    import argparse
-
     parse = argparse.ArgumentParser(description="netCDF Comparison Tool")
     # General args
     parse.add_argument("folder1", type=Path, help="Path of first folder to compare")
@@ -31,7 +29,10 @@ def get_args(raw_args=None):
         "Es mfsX_date.nc and expX_date.nc -> date.nc is the common part",
     )
     parse.add_argument(
-        "--variables", nargs="+", default=settings.DEFAULT_VARIABLES_TO_CHECK, help="Variable to compare"
+        "--variables",
+        nargs="+",
+        default=settings.DEFAULT_VARIABLES_TO_CHECK,
+        help="Variable to compare",
     )
     parse.add_argument(
         "-v",
