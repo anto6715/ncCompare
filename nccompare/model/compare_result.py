@@ -12,4 +12,4 @@ class CompareResult(NamedTuple):
     max_diff: float = np.nan
     mask_equal: bool = False
     variable: str = ""
-    description: str = ""
+    description: str = "-"
