@@ -18,16 +18,17 @@ def get_args(raw_args=None):
         dest="filter_name",
         type=str,
         default=settings.DEFAULT_NAME_TO_COMPARE,
-        help="Filter to select files to compare. Examples: *.nc, *_grid_*"
+        help="Filter to select files to compare. Examples: *.nc, *_grid_*",
     )
     parse.add_argument(
-        "--common_pattern",
+        "--common-pattern",
         type=str,
         default=settings.DEFAULT_COMMON_PATTERN,
         help="Common file pattern in two files to compare"
         "Es mfsX_date.nc and expX_date.nc -> date.nc is the common part",
     )
     parse.add_argument(
+        "-v",
         "--variables",
         nargs="+",
         default=settings.DEFAULT_VARIABLES_TO_CHECK,

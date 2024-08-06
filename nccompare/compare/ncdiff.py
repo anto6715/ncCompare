@@ -172,7 +172,7 @@ def get_dataset_variables(dataset: xr.Dataset, variables: List[str]) -> List[str
         variables_to_check = variables
 
     for v in variables_to_check:
-        if dataset[v].dtype not in settings.DTYPE_NOT_CHECKED:
+        if v in dataset and dataset[v].dtype not in settings.DTYPE_NOT_CHECKED:
             ds_variables.append(v)
 
     return ds_variables

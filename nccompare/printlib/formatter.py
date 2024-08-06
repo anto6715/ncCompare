@@ -55,7 +55,7 @@ def print_comparison(comparison: Comparison) -> None:
                 render(c.description),
             )
 
-    console.print(table)
+    console.print("\n", table)
 
 
 def render(value: Any):

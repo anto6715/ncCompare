@@ -1,5 +1,18 @@
 # netCDF Diff Comparison tool - ncpare
 
+<!-- TOC -->
+* [netCDF Diff Comparison tool - ncpare](#netcdf-diff-comparison-tool---ncpare)
+  * [Installation](#installation)
+    * [Via PIP](#via-pip)
+  * [Usage](#usage)
+    * [Select Variables](#select-variables)
+    * [Filter files](#filter-files)
+    * [Compare files with different filenames](#compare-files-with-different-filenames)
+  * [Author](#author)
+  * [Contributing](#contributing)
+  * [Contact](#contact)
+<!-- TOC -->
+
 `ncpare` is a tool for comparing netCDF files, providing a detailed diff of their contents. It is designed to help users
 identify differences between datasets stored in netCDF format.
 
@@ -11,4 +24,81 @@ identify differences between datasets stored in netCDF format.
 [![rich](https://img.shields.io/badge/rich-13.7.1-brown.svg)](https://github.com/Textualize/rich?tab=readme-ov-file)
 ![Tests](https://img.shields.io/badge/coverage-0%25-red)
 
+![Output](docs/output.png)
+
 ## Installation
+
+### Via PIP
+
+```shell
+pip install nccompare
+```
+
+## Usage
+
+```shell
+ncpare [-h] [-f--filter FILTER_NAME] [--common_pattern COMMON_PATTERN] [--variables VARIABLES [VARIABLES ...]] [--last_time_step] [-V] folder1 folder2
+
+netCDF Comparison Tool
+
+positional arguments:
+  folder1               Path of first folder to compare
+  folder2               Path of second folder to compare
+
+options:
+  -h, --help            show this help message and exit
+  -f--filter FILTER_NAME
+                        Filter to select files to compare. Examples: *.nc, *_grid_*
+  --common_pattern COMMON_PATTERN
+                        Common file pattern in two files to compareEs mfsX_date.nc and expX_date.nc -> date.nc is the common part
+  -v, --variables VARIABLES [VARIABLES ...]
+                        Variable to compare
+  --last_time_step      If True, compare only the last time step available in each file
+  -V, --version         Print version and exit
+
+```
+
+### Select Variables
+
+It is possible to choose which parameter to compare:
+
+```shell
+ncpare folder1 folder2 -v "votemper" "vosaline"
+```
+
+![Variables](docs/variables.png)
+
+
+### Filter files
+
+As default **ncpare** read iterate over all files in **folder1** and expect to find them in **folder2**. Using filters,
+it is possible to select only a subset of input files. For example:
+
+```shell
+ncpare folder1 folder2 -f "*_grid_T.nc"
+```
+
+### Compare files with different filenames
+
+It is possible to compare two files also if the filenames are slightly different if they have a common pattern.
+For example, if we have:
+
+* `a/my-simu_19820101_grid_T.nc`
+* `b/another-exp_19820101_grid_T.nc`
+
+It is still possible to compare the file with:
+```shell
+ncpare folder1 folder2 --commom-pattern ".+_19820101_grid_T.nc"
+```
+
+Notice the regex syntax `.+` to match any pattern before `_19820101`
+
+## Author
+
+- Antonio Mariani (antonio.mariani@cmcc.it)
+
+## Contributing
+Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+
+## Contact
+For any questions or suggestions, please open an issue on the project's GitHub repository.
