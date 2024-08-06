@@ -1,17 +1,15 @@
-from pathlib import Path
 from typing import NamedTuple
+
+import numpy as np
 
 PASSED = True
 FAILED = False
 
 
 class CompareResult(NamedTuple):
-    result: bool = FAILED
-    relative_error: float = "-"
-    min_diff: float = "-"
-    max_diff: float = "-"
-    mask_equal: bool = "-"
-    file1: Path = "-"
-    file2: Path = "-"
-    variable: str = "-"
+    relative_error: float = np.nan
+    min_diff: float = np.nan
+    max_diff: float = np.nan
+    mask_equal: bool = False
+    variable: str = ""
     description: str = "-"

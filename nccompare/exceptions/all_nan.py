@@ -1,0 +1,2 @@
+class AllNaN(Exception):
+    pass

@@ -1,6 +1,7 @@
 import argparse
 import importlib.metadata
 import sys
+import time
 from pathlib import Path
 
 from nccompare import core
@@ -8,8 +9,6 @@ from nccompare.conf import settings
 
 
 def get_args(raw_args=None):
-    import argparse
-
     parse = argparse.ArgumentParser(description="netCDF Comparison Tool")
     # General args
     parse.add_argument("folder1", type=Path, help="Path of first folder to compare")
@@ -19,25 +18,21 @@ def get_args(raw_args=None):
         dest="filter_name",
         type=str,
         default=settings.DEFAULT_NAME_TO_COMPARE,
-        help="Name of the files to compare."
-        "It can be a sub-set of the complete name or a regex expression",
+        help="Filter to select files to compare. Examples: *.nc, *_grid_*",
     )
     parse.add_argument(
-        "--common_pattern",
+        "--common-pattern",
         type=str,
         default=settings.DEFAULT_COMMON_PATTERN,
-        help="Common file pattern in two files to compare. "
+        help="Common file pattern in two files to compare"
         "Es mfsX_date.nc and expX_date.nc -> date.nc is the common part",
     )
     parse.add_argument(
-        "--variables", nargs="+", default=None, help="Variable to compare"
-    )
-    parse.add_argument(
         "-v",
-        dest="verbose",
-        default=3,
-        type=int,
-        help="Verbose level from 1 (CRITICAL) to 5 (logger.debug). Default is 2 (ERROR)",
+        "--variables",
+        nargs="+",
+        default=settings.DEFAULT_VARIABLES_TO_CHECK,
+        help="Variable to compare",
     )
     parse.add_argument(
         "--last_time_step",
@@ -61,5 +56,7 @@ def get_args(raw_args=None):
 
 
 if __name__ == "__main__":
+    start = time.perf_counter()
     args: argparse.Namespace = get_args()
     core.execute(**vars(args))
+    print(f"Run time: {time.perf_counter() - start}Sec")
