@@ -14,8 +14,6 @@ from nccompare.model.comparison import Comparison
 warnings.filterwarnings("ignore", message="All-NaN slice encountered")
 
 logger = logging.getLogger("nccompare")
-PASS = "PASSED"
-FAIL = "FAILED"
 
 
 def compare_files(
