@@ -1,18 +1,5 @@
 # netCDF Diff Comparison tool - ncpare
 
-<!-- TOC -->
-* [netCDF Diff Comparison tool - ncpare](#netcdf-diff-comparison-tool---ncpare)
-  * [Installation](#installation)
-    * [Via PIP](#via-pip)
-  * [Usage](#usage)
-    * [Select Variables](#select-variables)
-    * [Filter files](#filter-files)
-    * [Compare files with different filenames](#compare-files-with-different-filenames)
-  * [Author](#author)
-  * [Contributing](#contributing)
-  * [Contact](#contact)
-<!-- TOC -->
-
 `ncpare` is a tool for comparing netCDF files, providing a detailed diff of their contents. It is designed to help users
 identify differences between datasets stored in netCDF format.
 
@@ -24,7 +11,7 @@ identify differences between datasets stored in netCDF format.
 [![rich](https://img.shields.io/badge/rich-13.7.1-brown.svg)](https://github.com/Textualize/rich?tab=readme-ov-file)
 ![Tests](https://img.shields.io/badge/coverage-0%25-red)
 
-![Output](docs/output.png)
+![Output](https://github.com/anto6715/ncCompare/raw/master/docs/output.png)
 
 ## Installation
 
@@ -66,7 +53,7 @@ It is possible to choose which parameter to compare:
 ncpare folder1 folder2 -v "votemper" "vosaline"
 ```
 
-![Variables](docs/variables.png)
+![Variables](https://github.com/anto6715/ncCompare/raw/master/docs/variables.png)
 
 
 ### Filter files
