@@ -35,13 +35,6 @@ def get_args(raw_args=None):
         help="Variable to compare",
     )
     parse.add_argument(
-        "-v",
-        dest="verbose",
-        default=3,
-        type=int,
-        help="Verbose level from 1 (CRITICAL) to 5 (logger.debug). Default is 2 (ERROR)",
-    )
-    parse.add_argument(
         "--last_time_step",
         dest="last_time_step",
         action="store_true",
