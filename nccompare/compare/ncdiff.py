@@ -150,7 +150,8 @@ def compute_relative_error(diff: np.ndarray, field2: np.ndarray):
         # Suppress division by zero and invalid value warnings
         with np.errstate(divide="ignore", invalid="ignore"):
             rel_err_array = abs_diff / abs_field2
-            rel_err_array[np.isinf(rel_err_array)] = np.nan
+            if np.isinf(rel_err_array).any():
+                rel_err_array[np.isinf(rel_err_array)] = np.nan
             rel_err = np.nanmax(rel_err_array)
     except Exception as e:
         logger.debug(f"An error occurred when computing relative error: {e}")
